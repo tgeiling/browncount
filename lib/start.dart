@@ -12,6 +12,7 @@ class StartPage extends StatefulWidget {
 
 class _StartPageState extends State<StartPage> {
   bool _hasShownStreakDialog = false;
+  String _lastCheckedDate = '';
 
   @override
   void didChangeDependencies() {
@@ -20,17 +21,25 @@ class _StartPageState extends State<StartPage> {
     final provider = Provider.of<AppProvider>(context, listen: false);
 
     if (provider.isInitialized && !_hasShownStreakDialog) {
-      final streakInfo = provider.getStreakLostInfo();
+      _checkStreakStatus(provider);
+    }
+  }
 
-      if (streakInfo['hasLost']) {
-        _hasShownStreakDialog = true;
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _showStreakLostDialog(
-            streakInfo['ratingLost'],
-            streakInfo['shitLost'],
-          );
-        });
-      }
+  void _checkStreakStatus(AppProvider provider) {
+    final today = DateTime.now();
+    final todayString = '${today.year}-${today.month}-${today.day}';
+
+    // Only check once per day
+    if (_lastCheckedDate == todayString) return;
+
+    _lastCheckedDate = todayString;
+    final streakInfo = provider.getStreakLostInfo();
+
+    if (streakInfo['hasLost']) {
+      _hasShownStreakDialog = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showStreakLostDialog(streakInfo['ratingLost'], streakInfo['shitLost']);
+      });
     }
   }
 
@@ -114,40 +123,19 @@ class _StartPageState extends State<StartPage> {
           ),
           content: SizedBox(
             width: double.maxFinite,
-            child: GridView.builder(
-              shrinkWrap: true,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                childAspectRatio: 1.5,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-              ),
-              itemCount: 11,
-              itemBuilder: (context, index) {
-                return Material(
-                  color: const Color(0xFF5D4E37),
-                  borderRadius: BorderRadius.circular(8),
-                  child: InkWell(
-                    onTap: () async {
-                      await context.read<AppProvider>().setRating(index);
-                      if (context.mounted) {
-                        Navigator.of(context).pop();
-                      }
-                    },
-                    borderRadius: BorderRadius.circular(8),
-                    child: Center(
-                      child: Text(
-                        '$index',
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildRatingButton(context, DayRating.terrible),
+                const SizedBox(height: 12),
+                _buildRatingButton(context, DayRating.bad),
+                const SizedBox(height: 12),
+                _buildRatingButton(context, DayRating.okay),
+                const SizedBox(height: 12),
+                _buildRatingButton(context, DayRating.good),
+                const SizedBox(height: 12),
+                _buildRatingButton(context, DayRating.amazing),
+              ],
             ),
           ),
           actions: [
@@ -177,10 +165,46 @@ class _StartPageState extends State<StartPage> {
     );
   }
 
+  Widget _buildRatingButton(BuildContext context, DayRating rating) {
+    return Material(
+      color: const Color(0xFF5D4E37),
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        onTap: () async {
+          await context.read<AppProvider>().setRating(rating);
+          if (context.mounted) {
+            Navigator.of(context).pop();
+          }
+        },
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Center(
+            child: Text(
+              rating.displayName.toUpperCase(),
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                letterSpacing: 1.2,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<AppProvider>(
       builder: (context, provider, child) {
+        // Check for day changes whenever the widget rebuilds
+        if (provider.isInitialized) {
+          _checkStreakStatus(provider);
+        }
+
         return Scaffold(
           backgroundColor: const Color(0xFFFBF8F3),
           body: SafeArea(
@@ -192,22 +216,30 @@ class _StartPageState extends State<StartPage> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _buildStatBadge(
-                        'RATING\nStreak',
-                        provider.ratingStreak,
-                        const Color(0xFFD4A574),
+                      Expanded(
+                        child: _buildStatBadge(
+                          'RATING\nStreak',
+                          provider.ratingStreak,
+                          const Color(0xFFD4A574),
+                        ),
                       ),
                       const SizedBox(width: 12),
-                      _buildStatBadge(
-                        'SHIT\nStreak',
-                        provider.shitStreak,
-                        const Color(0xFFB08968),
+                      Expanded(
+                        child: _buildStatBadge(
+                          'SHIT\nStreak',
+                          provider.shitStreak,
+                          const Color(0xFFB08968),
+                        ),
                       ),
                       const SizedBox(width: 12),
-                      _buildStatBadge(
-                        'TODAY\nRating',
-                        provider.todaysRating == -1 ? 0 : provider.todaysRating,
-                        const Color(0xFF8B7355),
+                      Expanded(
+                        child: _buildStatBadgeText(
+                          'TODAY\nRating',
+                          provider.todaysRating == DayRating.none
+                              ? 'None'
+                              : provider.todaysRating.displayName,
+                          const Color(0xFF8B7355),
+                        ),
                       ),
                     ],
                   ),
@@ -328,13 +360,14 @@ class _StartPageState extends State<StartPage> {
 
   Widget _buildStatBadge(String label, int value, Color color) {
     return Container(
+      height: 90,
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(12),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+      padding: const EdgeInsets.all(12),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
             label,
@@ -347,12 +380,58 @@ class _StartPageState extends State<StartPage> {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 6),
+          Expanded(
+            child: FittedBox(
+              fit: BoxFit.contain,
+              child: Text(
+                '$value',
+                style: const TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatBadgeText(String label, String value, Color color) {
+    return Container(
+      height: 90,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
           Text(
-            '$value',
+            label,
             style: const TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
+              fontSize: 10,
+              color: Colors.white70,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 1.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 6),
+          Expanded(
+            child: FittedBox(
+              fit: BoxFit.contain,
+              child: Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+                textAlign: TextAlign.center,
+              ),
             ),
           ),
         ],

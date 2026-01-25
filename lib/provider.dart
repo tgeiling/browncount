@@ -2,11 +2,66 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+enum DayRating { none, terrible, bad, okay, good, amazing }
+
+DayRating dayRatingFromValue(int value) {
+  switch (value) {
+    case 0:
+      return DayRating.terrible;
+    case 1:
+      return DayRating.bad;
+    case 2:
+      return DayRating.okay;
+    case 3:
+      return DayRating.good;
+    case 4:
+      return DayRating.amazing;
+    default:
+      return DayRating.none;
+  }
+}
+
+extension DayRatingExtension on DayRating {
+  String get displayName {
+    switch (this) {
+      case DayRating.none:
+        return 'None';
+      case DayRating.terrible:
+        return 'Terrible';
+      case DayRating.bad:
+        return 'Bad';
+      case DayRating.okay:
+        return 'Okay';
+      case DayRating.good:
+        return 'Good';
+      case DayRating.amazing:
+        return 'Amazing';
+    }
+  }
+
+  int get value {
+    switch (this) {
+      case DayRating.none:
+        return -1;
+      case DayRating.terrible:
+        return 0;
+      case DayRating.bad:
+        return 1;
+      case DayRating.okay:
+        return 2;
+      case DayRating.good:
+        return 3;
+      case DayRating.amazing:
+        return 4;
+    }
+  }
+}
+
 class AppProvider extends ChangeNotifier {
   int _counter = 0;
   int _ratingStreak = 0;
   int _shitStreak = 0;
-  int _todaysRating = -1;
+  DayRating _todaysRating = DayRating.none;
   String _lastRatingDate = '';
   String _lastShitDate = '';
   bool _isInitialized = false;
@@ -14,7 +69,7 @@ class AppProvider extends ChangeNotifier {
   int get counter => _counter;
   int get ratingStreak => _ratingStreak;
   int get shitStreak => _shitStreak;
-  int get todaysRating => _todaysRating;
+  DayRating get todaysRating => _todaysRating;
   String get lastRatingDate => _lastRatingDate;
   String get lastShitDate => _lastShitDate;
   bool get isInitialized => _isInitialized;
@@ -27,7 +82,8 @@ class AppProvider extends ChangeNotifier {
     _counter = prefs.getInt('counter') ?? 0;
     _ratingStreak = prefs.getInt('ratingStreak') ?? 0;
     _shitStreak = prefs.getInt('shitStreak') ?? 0;
-    _todaysRating = prefs.getInt('todaysRating') ?? -1;
+    int todaysRatingValue = prefs.getInt('todaysRating') ?? -1;
+    _todaysRating = dayRatingFromValue(todaysRatingValue);
     _lastRatingDate = prefs.getString('lastRatingDate') ?? '';
     _lastShitDate = prefs.getString('lastShitDate') ?? '';
     _isInitialized = true;
@@ -51,7 +107,7 @@ class AppProvider extends ChangeNotifier {
 
       // Reset today's rating for new day
       if (_lastRatingDate != todayString) {
-        _todaysRating = -1;
+        _todaysRating = DayRating.none;
         await prefs.setInt('todaysRating', -1);
       }
     }
@@ -79,12 +135,55 @@ class AppProvider extends ChangeNotifier {
     await prefs.setInt('counter', _counter);
     await prefs.setInt('ratingStreak', _ratingStreak);
     await prefs.setInt('shitStreak', _shitStreak);
-    await prefs.setInt('todaysRating', _todaysRating);
+    await prefs.setInt('todaysRating', _todaysRating.value);
     await prefs.setString('lastRatingDate', _lastRatingDate);
     await prefs.setString('lastShitDate', _lastShitDate);
   }
 
+  Future<void> _checkAndUpdateStreaks() async {
+    final prefs = await SharedPreferences.getInstance();
+    final today = DateTime.now();
+    final todayString = '${today.year}-${today.month}-${today.day}';
+    final yesterday = today.subtract(const Duration(days: 1));
+    final yesterdayString =
+        '${yesterday.year}-${yesterday.month}-${yesterday.day}';
+
+    bool streaksChanged = false;
+
+    // Check if rating streak should be broken
+    if (_lastRatingDate.isNotEmpty && _lastRatingDate != todayString) {
+      if (_lastRatingDate != yesterdayString) {
+        _ratingStreak = 0;
+        await prefs.setInt('ratingStreak', 0);
+        streaksChanged = true;
+      }
+
+      // Reset today's rating for new day
+      if (_todaysRating != DayRating.none) {
+        _todaysRating = DayRating.none;
+        await prefs.setInt('todaysRating', -1);
+        streaksChanged = true;
+      }
+    }
+
+    // Check if shit streak should be broken
+    if (_lastShitDate.isNotEmpty && _lastShitDate != todayString) {
+      if (_lastShitDate != yesterdayString) {
+        _shitStreak = 0;
+        await prefs.setInt('shitStreak', 0);
+        streaksChanged = true;
+      }
+    }
+
+    if (streaksChanged) {
+      await _saveData();
+    }
+  }
+
   Future<void> incrementCounter() async {
+    // Check streaks before any action
+    await _checkAndUpdateStreaks();
+
     final today = DateTime.now();
     final todayString = '${today.year}-${today.month}-${today.day}';
     final timestamp = DateTime.now().toIso8601String();
@@ -103,7 +202,10 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> setRating(int rating) async {
+  Future<void> setRating(DayRating rating) async {
+    // Check streaks before any action
+    await _checkAndUpdateStreaks();
+
     final today = DateTime.now();
     final todayString = '${today.year}-${today.month}-${today.day}';
     final timestamp = DateTime.now().toIso8601String();
@@ -117,7 +219,11 @@ class AppProvider extends ChangeNotifier {
     }
 
     // Save day data with timestamp
-    await _saveDayData(todayString, rating: rating, ratingTime: timestamp);
+    await _saveDayData(
+      todayString,
+      rating: rating.value,
+      ratingTime: timestamp,
+    );
     await _saveData();
     notifyListeners();
   }
@@ -211,7 +317,7 @@ class AppProvider extends ChangeNotifier {
 
     // Update today's rating if editing today
     if (dateString == todayString) {
-      _todaysRating = rating;
+      _todaysRating = dayRatingFromValue(rating);
     }
 
     await _saveData();

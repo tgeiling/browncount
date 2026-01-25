@@ -13,6 +13,13 @@ class StatsPage extends StatefulWidget {
 }
 
 class _StatsPageState extends State<StatsPage> {
+  // Rating Colors - Easy to edit
+  static const Color colorTerrible = Color.fromARGB(255, 82, 130, 197);
+  static const Color colorBad = Color.fromARGB(255, 119, 173, 82);
+  static const Color colorOkay = Color.fromARGB(255, 237, 219, 117);
+  static const Color colorGood = Color.fromARGB(255, 232, 166, 79);
+  static const Color colorAmazing = Color.fromARGB(255, 236, 97, 82);
+
   Map<String, DayData> _dayDataMap = {};
   int _selectedYear = DateTime.now().year;
   int _selectedMonth = DateTime.now().month;
@@ -75,17 +82,21 @@ class _StatsPageState extends State<StatsPage> {
       return Colors.brown[300]!;
     }
 
-    if (data.rating >= 0 && data.rating <= 3) {
-      return Colors.red[400]!;
-    } else if (data.rating >= 4 && data.rating <= 6) {
-      return Colors.orange[400]!;
-    } else if (data.rating >= 7 && data.rating <= 8) {
-      return Colors.lightGreen[400]!;
-    } else if (data.rating >= 9) {
-      return Colors.green[600]!;
+    // Rating colors based on 5 categories
+    switch (data.rating) {
+      case 0: // Terrible
+        return colorTerrible;
+      case 1: // Bad
+        return colorBad;
+      case 2: // Okay
+        return colorOkay;
+      case 3: // Good
+        return colorGood;
+      case 4: // Amazing
+        return colorAmazing;
+      default:
+        return Colors.grey[300]!;
     }
-
-    return Colors.grey[300]!;
   }
 
   Color _getShitCountColor(DayData? data) {
@@ -93,22 +104,12 @@ class _StatsPageState extends State<StatsPage> {
       return Colors.grey[300]!;
     }
 
-    // Count shits for this day - for now, we'll use intensity based on having a shit
-    // Since we only track 1 shit per day in current implementation,
-    // we'll create 4 shades: no data, has shit (light to dark brown based on rating as proxy)
-    // If you want actual shit count per day, the data structure needs to be modified
+    // Since we only track 1 shit per day (boolean hasShit),
+    // always show the lightest brown color for days with 1 shit
+    // The darker colors are reserved for future functionality
+    // where multiple shits per day can be tracked
 
-    // For now, use 4 brown shades based on combination of having shit and rating
-    if (data.rating == -1) {
-      // Shit only, no rating - lightest brown
-      return const Color(0xFFD4A574); // Light brown
-    } else if (data.rating >= 0 && data.rating <= 3) {
-      return const Color(0xFFB08968); // Medium-light brown
-    } else if (data.rating >= 4 && data.rating <= 7) {
-      return const Color(0xFF8B7355); // Medium brown
-    } else {
-      return const Color(0xFF5D4E37); // Dark brown
-    }
+    return const Color(0xFFD4A574); // Light brown - Shit 1
   }
 
   void _showDayDetailsDialog(String dateString, DayData? dayData) async {
@@ -204,50 +205,53 @@ class _StatsPageState extends State<StatsPage> {
                           ),
                           const SizedBox(height: 12),
 
-                          // Rating Grid - Fixed height
-                          SizedBox(
-                            height: 180,
-                            child: GridView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              gridDelegate:
-                                  const SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: 4,
-                                    childAspectRatio: 1.2,
-                                    crossAxisSpacing: 8,
-                                    mainAxisSpacing: 8,
-                                  ),
-                              itemCount: 11,
-                              itemBuilder: (context, index) {
-                                final isSelected = rating == index;
-                                return Material(
-                                  color: isSelected
-                                      ? const Color(0xFF5D4E37)
-                                      : const Color(0xFFE8DCC8),
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: InkWell(
-                                    onTap: () {
-                                      setDialogState(() {
-                                        rating = index;
-                                      });
-                                    },
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: Center(
-                                      child: Text(
-                                        '$index',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                          color: isSelected
-                                              ? Colors.white
-                                              : const Color(0xFF5D4E37),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
+                          // Rating buttons
+                          _buildDialogRatingButton(
+                            'TERRIBLE',
+                            0,
+                            rating,
+                            setDialogState,
+                            (val) => rating = val,
+                          ),
+                          const SizedBox(height: 8),
+                          _buildDialogRatingButton(
+                            'BAD',
+                            1,
+                            rating,
+                            setDialogState,
+                            (val) => rating = val,
+                          ),
+                          const SizedBox(height: 8),
+                          _buildDialogRatingButton(
+                            'OKAY',
+                            2,
+                            rating,
+                            setDialogState,
+                            (val) => rating = val,
+                          ),
+                          const SizedBox(height: 8),
+                          _buildDialogRatingButton(
+                            'GOOD',
+                            3,
+                            rating,
+                            setDialogState,
+                            (val) => rating = val,
+                          ),
+                          const SizedBox(height: 8),
+                          _buildDialogRatingButton(
+                            'AMAZING',
+                            4,
+                            rating,
+                            setDialogState,
+                            (val) => rating = val,
+                          ),
+                          const SizedBox(height: 8),
+                          _buildDialogRatingButton(
+                            'NONE',
+                            -1,
+                            rating,
+                            setDialogState,
+                            (val) => rating = val,
                           ),
                           if (rating != -1 && ratingTime.isNotEmpty)
                             Padding(
@@ -342,6 +346,43 @@ class _StatsPageState extends State<StatsPage> {
     }
   }
 
+  Widget _buildDialogRatingButton(
+    String label,
+    int value,
+    int currentRating,
+    StateSetter setDialogState,
+    Function(int) onSelect,
+  ) {
+    final isSelected = currentRating == value;
+    return Material(
+      color: isSelected ? const Color(0xFF5D4E37) : const Color(0xFFE8DCC8),
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        onTap: () {
+          setDialogState(() {
+            onSelect(value);
+          });
+        },
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: isSelected ? Colors.white : const Color(0xFF5D4E37),
+                letterSpacing: 1.0,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildMonthView() {
     final daysInMonth = DateTime(_selectedYear, _selectedMonth + 1, 0).day;
     final firstDayOfMonth = DateTime(_selectedYear, _selectedMonth, 1);
@@ -405,12 +446,13 @@ class _StatsPageState extends State<StatsPage> {
                       child: Center(
                         child: dayData != null && dayData.rating != -1
                             ? Text(
-                                '${dayData.rating}',
+                                _getRatingLabel(dayData.rating),
                                 style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w900,
                                   color: Colors.white,
                                 ),
+                                textAlign: TextAlign.center,
                               )
                             : const SizedBox.shrink(),
                       ),
@@ -501,21 +543,17 @@ class _StatsPageState extends State<StatsPage> {
               children: [
                 _buildLegendItem(Colors.grey[300]!, 'No shit'),
                 const SizedBox(width: 16),
-                _buildLegendItem(const Color(0xFFD4A574), 'Shit only'),
+                _buildLegendItem(const Color(0xFFD4A574), 'Shit 1'),
               ],
             ),
             const SizedBox(height: 8),
             Row(
               children: [
-                _buildLegendItem(const Color(0xFFB08968), 'Shit + rating 0-3'),
+                _buildLegendItem(const Color(0xFFB08968), 'Shits 2'),
                 const SizedBox(width: 8),
-                _buildLegendItem(const Color(0xFF8B7355), 'Shit + rating 4-7'),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                _buildLegendItem(const Color(0xFF5D4E37), 'Shit + rating 8+'),
+                _buildLegendItem(const Color(0xFF8B7355), 'Shits 3'),
+                const SizedBox(width: 8),
+                _buildLegendItem(const Color(0xFF5D4E37), 'Shits 4+'),
               ],
             ),
           ] else ...[
@@ -530,17 +568,19 @@ class _StatsPageState extends State<StatsPage> {
             const SizedBox(height: 8),
             Row(
               children: [
-                _buildLegendItem(Colors.red[400]!, 'Bad (0-3)'),
-                const SizedBox(width: 16),
-                _buildLegendItem(Colors.orange[400]!, 'Okay (4-6)'),
+                _buildLegendItem(colorTerrible, 'Terrible'),
+                const SizedBox(width: 8),
+                _buildLegendItem(colorBad, 'Bad'),
+                const SizedBox(width: 8),
+                _buildLegendItem(colorOkay, 'Okay'),
               ],
             ),
             const SizedBox(height: 8),
             Row(
               children: [
-                _buildLegendItem(Colors.lightGreen[400]!, 'Good (7-8)'),
+                _buildLegendItem(colorGood, 'Good'),
                 const SizedBox(width: 16),
-                _buildLegendItem(Colors.green[600]!, 'Great (9-10)'),
+                _buildLegendItem(colorAmazing, 'Amazing'),
               ],
             ),
           ],
@@ -583,6 +623,28 @@ class _StatsPageState extends State<StatsPage> {
       'December',
     ];
     return monthNames[month - 1];
+  }
+
+  String _getRatingLabel(int rating) {
+    switch (rating) {
+      case 0:
+        return ":'(";
+
+      case 1:
+        return ':(';
+
+      case 2:
+        return ':|';
+
+      case 3:
+        return ':)';
+
+      case 4:
+        return ':D';
+
+      default:
+        return '';
+    }
   }
 
   @override
