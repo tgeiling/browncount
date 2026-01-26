@@ -1,4 +1,4 @@
-// start.dart
+// start.dart - Brutalist Style
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'provider.dart';
@@ -61,40 +61,49 @@ class _StartPageState extends State<StartPage> {
       barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: const Color(0xFFFBF8F3),
+          backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            side: const BorderSide(color: Colors.black, width: 4),
+            borderRadius: BorderRadius.circular(0),
           ),
           title: const Text(
-            'Streak Lost!',
+            'STREAK LOST!',
             style: TextStyle(
-              color: Color(0xFF5D4E37),
-              fontWeight: FontWeight.bold,
+              color: Colors.black,
+              fontWeight: FontWeight.w900,
+              fontSize: 18,
             ),
           ),
           content: Text(
             message,
-            style: const TextStyle(color: Color(0xFF5D4E37)),
+            style: const TextStyle(
+              color: Colors.black,
+              fontWeight: FontWeight.w500,
+            ),
           ),
           actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              style: TextButton.styleFrom(
-                backgroundColor: const Color(0xFF5D4E37),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.black,
+                border: Border.all(color: Colors.black, width: 4),
               ),
-              child: const Text(
-                'OK',
-                style: TextStyle(fontWeight: FontWeight.bold),
+              child: TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                style: TextButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                  shape: const RoundedRectangleBorder(),
+                ),
+                child: const Text(
+                  'OK',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                ),
               ),
             ),
           ],
@@ -108,17 +117,17 @@ class _StartPageState extends State<StartPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: const Color(0xFFFBF8F3),
+          backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            side: const BorderSide(color: Colors.black, width: 4),
+            borderRadius: BorderRadius.circular(0),
           ),
           title: const Text(
             'RATE THE DAY',
             style: TextStyle(
-              color: Color(0xFF5D4E37),
-              fontWeight: FontWeight.bold,
+              color: Colors.black,
+              fontWeight: FontWeight.w900,
               fontSize: 16,
-              letterSpacing: 1.5,
             ),
           ),
           content: SizedBox(
@@ -139,24 +148,28 @@ class _StartPageState extends State<StartPage> {
             ),
           ),
           actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              style: TextButton.styleFrom(
-                backgroundColor: const Color(0xFFA0826D),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                border: Border.all(color: Colors.black, width: 4),
               ),
-              child: const Text(
-                'Cancel',
-                style: TextStyle(fontWeight: FontWeight.bold),
+              child: TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                style: TextButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                  shape: const RoundedRectangleBorder(),
+                ),
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
             ),
           ],
@@ -166,28 +179,52 @@ class _StartPageState extends State<StartPage> {
   }
 
   Widget _buildRatingButton(BuildContext context, DayRating rating) {
-    return Material(
-      color: const Color(0xFF5D4E37),
-      borderRadius: BorderRadius.circular(8),
-      child: InkWell(
-        onTap: () async {
-          await context.read<AppProvider>().setRating(rating);
-          if (context.mounted) {
-            Navigator.of(context).pop();
-          }
-        },
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Center(
-            child: Text(
-              rating.displayName.toUpperCase(),
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                letterSpacing: 1.2,
+    Color buttonColor;
+    switch (rating) {
+      case DayRating.terrible:
+        buttonColor = const Color(0xFF5282C5);
+        break;
+      case DayRating.bad:
+        buttonColor = const Color(0xFF77AD52);
+        break;
+      case DayRating.okay:
+        buttonColor = const Color(0xFFEDDB75);
+        break;
+      case DayRating.good:
+        buttonColor = const Color(0xFFE8A64F);
+        break;
+      case DayRating.amazing:
+        buttonColor = const Color(0xFFEC6152);
+        break;
+      default:
+        buttonColor = Colors.black;
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: buttonColor,
+        border: Border.all(color: Colors.black, width: 4),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () async {
+            await context.read<AppProvider>().setRating(rating);
+            if (context.mounted) {
+              Navigator.of(context).pop();
+            }
+          },
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Center(
+              child: Text(
+                rating.displayName.toUpperCase(),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.black,
+                ),
               ),
             ),
           ),
@@ -206,7 +243,7 @@ class _StartPageState extends State<StartPage> {
         }
 
         return Scaffold(
-          backgroundColor: const Color(0xFFFBF8F3),
+          backgroundColor: Colors.white,
           body: SafeArea(
             child: Column(
               children: [
@@ -218,26 +255,26 @@ class _StartPageState extends State<StartPage> {
                     children: [
                       Expanded(
                         child: _buildStatBadge(
-                          'RATING\nStreak',
+                          'RATING\nSTREAK',
                           provider.ratingStreak,
                           const Color(0xFFD4A574),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 16),
                       Expanded(
                         child: _buildStatBadge(
-                          'SHIT\nStreak',
+                          'SHIT\nSTREAK',
                           provider.shitStreak,
                           const Color(0xFFB08968),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 16),
                       Expanded(
                         child: _buildStatBadgeText(
-                          'TODAY\nRating',
+                          'TODAY\nRATING',
                           provider.todaysRating == DayRating.none
-                              ? 'None'
-                              : provider.todaysRating.displayName,
+                              ? 'NONE'
+                              : provider.todaysRating.displayName.toUpperCase(),
                           const Color(0xFF8B7355),
                         ),
                       ),
@@ -245,20 +282,19 @@ class _StartPageState extends State<StartPage> {
                   ),
                 ),
 
-                const SizedBox(height: 30),
+                const SizedBox(height: 40),
 
                 // Total Count Label
                 const Text(
                   'TOTAL COUNT',
                   style: TextStyle(
                     fontSize: 14,
-                    color: Color(0xFFA0826D),
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 2,
+                    color: Colors.black,
+                    fontWeight: FontWeight.w900,
                   ),
                 ),
 
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
 
                 // Main Counter
                 Expanded(
@@ -266,17 +302,10 @@ class _StartPageState extends State<StartPage> {
                     child: Text(
                       '${provider.counter}',
                       style: const TextStyle(
-                        fontSize: 140,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF5D4E37),
+                        fontSize: 120,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.black,
                         height: 1,
-                        shadows: [
-                          Shadow(
-                            offset: Offset(2, 2),
-                            blurRadius: 4,
-                            color: Color(0x0D000000),
-                          ),
-                        ],
                       ),
                     ),
                   ),
@@ -290,26 +319,29 @@ class _StartPageState extends State<StartPage> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Expanded(
-                          child: Material(
-                            color: const Color(0xFF5D4E37),
-                            borderRadius: BorderRadius.circular(12),
-                            child: InkWell(
-                              onTap: () => provider.incrementCounter(),
-                              borderRadius: BorderRadius.circular(12),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 28,
-                                  horizontal: 20,
-                                ),
-                                child: const Center(
-                                  child: Text(
-                                    'I have taken a shit',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.white,
-                                      letterSpacing: 0.5,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.black,
+                              border: Border.all(color: Colors.black, width: 4),
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () => provider.incrementCounter(),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 28,
+                                    horizontal: 20,
+                                  ),
+                                  child: const Center(
+                                    child: Text(
+                                      'I have taken\na shit',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -319,26 +351,29 @@ class _StartPageState extends State<StartPage> {
                         ),
                         const SizedBox(width: 16),
                         Expanded(
-                          child: Material(
-                            color: const Color(0xFFA0826D),
-                            borderRadius: BorderRadius.circular(12),
-                            child: InkWell(
-                              onTap: _showRatingDialog,
-                              borderRadius: BorderRadius.circular(12),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 28,
-                                  horizontal: 20,
-                                ),
-                                child: const Center(
-                                  child: Text(
-                                    'Rate the Day',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.white,
-                                      letterSpacing: 0.5,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.grey[300],
+                              border: Border.all(color: Colors.black, width: 4),
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: _showRatingDialog,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 28,
+                                    horizontal: 20,
+                                  ),
+                                  child: const Center(
+                                    child: Text(
+                                      'Rate the Day',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.black,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -363,7 +398,7 @@ class _StartPageState extends State<StartPage> {
       height: 90,
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.black, width: 4),
       ),
       padding: const EdgeInsets.all(12),
       child: Column(
@@ -373,9 +408,8 @@ class _StartPageState extends State<StartPage> {
             label,
             style: const TextStyle(
               fontSize: 10,
-              color: Colors.white70,
+              color: Colors.black,
               fontWeight: FontWeight.w600,
-              letterSpacing: 1.5,
             ),
             textAlign: TextAlign.center,
           ),
@@ -387,8 +421,8 @@ class _StartPageState extends State<StartPage> {
                 '$value',
                 style: const TextStyle(
                   fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.black,
                 ),
               ),
             ),
@@ -403,7 +437,7 @@ class _StartPageState extends State<StartPage> {
       height: 90,
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.black, width: 4),
       ),
       padding: const EdgeInsets.all(12),
       child: Column(
@@ -413,9 +447,8 @@ class _StartPageState extends State<StartPage> {
             label,
             style: const TextStyle(
               fontSize: 10,
-              color: Colors.white70,
+              color: Colors.black,
               fontWeight: FontWeight.w600,
-              letterSpacing: 1.5,
             ),
             textAlign: TextAlign.center,
           ),
@@ -426,9 +459,9 @@ class _StartPageState extends State<StartPage> {
               child: Text(
                 value,
                 style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.black,
                 ),
                 textAlign: TextAlign.center,
               ),
