@@ -52,7 +52,7 @@ class _StatsPageState extends State<StatsPage> {
           final parts = dataString.split('|');
           if (parts.length >= 2) {
             tempMap[dateString] = DayData(
-              hasShit: parts[0] == '1',
+              shitCount: int.tryParse(parts[0]) ?? 0,
               rating: int.tryParse(parts[1]) ?? -1,
               shitTime: parts.length > 2 ? parts[2] : '',
               ratingTime: parts.length > 3 ? parts[3] : '',
@@ -99,10 +99,16 @@ class _StatsPageState extends State<StatsPage> {
   }
 
   Color _getShitCountColor(DayData? data) {
-    if (data == null || !data.hasShit) {
-      return Colors.grey[300]!;
-    }
-    return const Color(0xFFD4A574);
+    if (data == null) return Colors.grey[300]!;
+    return getShitColor(data.shitCount);
+  }
+
+  Color getShitColor(int shitCount) {
+    if (shitCount == 0) return Colors.grey[300]!;
+    if (shitCount == 1) return Color(0xFFD2B48C); // Light brown
+    if (shitCount == 2) return Color(0xFFA0826D); // Medium brown
+    if (shitCount == 3) return Color(0xFF8B7355); // Darker brown
+    return Color(0xFF5D4E37); // Darkest brown for 4+
   }
 
   void _showDayDetailsDialog(String dateString, DayData? dayData) async {
@@ -111,7 +117,7 @@ class _StatsPageState extends State<StatsPage> {
 
     if (!mounted) return;
 
-    bool hasShit = details?['hasShit'] ?? false;
+    int shitCount = details?['shitCount'] ?? 0;
     int rating = details?['rating'] ?? -1;
     String shitTime = details?['shitTime'] ?? '';
     String ratingTime = details?['ratingTime'] ?? '';
@@ -127,7 +133,10 @@ class _StatsPageState extends State<StatsPage> {
                 side: BorderSide(color: Colors.black, width: 4),
               ),
               child: Container(
-                constraints: const BoxConstraints(maxWidth: 400),
+                constraints: const BoxConstraints(
+                  maxWidth: 400,
+                  maxHeight: 600,
+                ),
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.black, width: 4),
                 ),
@@ -136,7 +145,7 @@ class _StatsPageState extends State<StatsPage> {
                   children: [
                     // Title
                     Container(
-                      padding: const EdgeInsets.all(24.0),
+                      padding: const EdgeInsets.all(16.0),
                       decoration: const BoxDecoration(
                         border: Border(
                           bottom: BorderSide(color: Colors.black, width: 3),
@@ -152,128 +161,178 @@ class _StatsPageState extends State<StatsPage> {
                       ),
                     ),
 
-                    // Content
-                    Padding(
-                      padding: const EdgeInsets.all(24.0),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Shit Status
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.black, width: 2),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text(
-                                  'Shit:',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
+                    // Content - wrapped in Expanded and SingleChildScrollView
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Shit Status
+                              Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
                                     color: Colors.black,
+                                    width: 2,
                                   ),
                                 ),
-                                Switch(
-                                  value: hasShit,
-                                  onChanged: (value) {
-                                    setDialogState(() {
-                                      hasShit = value;
-                                    });
-                                  },
-                                  activeColor: Colors.black,
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (hasShit && shitTime.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.only(left: 8, top: 8),
-                              child: Text(
-                                'Time: ${_formatTime(shitTime)}',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          const SizedBox(height: 20),
-
-                          // Rating
-                          const Text(
-                            'Rating:',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-
-                          // Rating buttons
-                          _buildDialogRatingButton(
-                            'TERRIBLE',
-                            0,
-                            rating,
-                            setDialogState,
-                            (val) => rating = val,
-                          ),
-                          const SizedBox(height: 12),
-                          _buildDialogRatingButton(
-                            'BAD',
-                            1,
-                            rating,
-                            setDialogState,
-                            (val) => rating = val,
-                          ),
-                          const SizedBox(height: 12),
-                          _buildDialogRatingButton(
-                            'OKAY',
-                            2,
-                            rating,
-                            setDialogState,
-                            (val) => rating = val,
-                          ),
-                          const SizedBox(height: 12),
-                          _buildDialogRatingButton(
-                            'GOOD',
-                            3,
-                            rating,
-                            setDialogState,
-                            (val) => rating = val,
-                          ),
-                          const SizedBox(height: 12),
-                          _buildDialogRatingButton(
-                            'AMAZING',
-                            4,
-                            rating,
-                            setDialogState,
-                            (val) => rating = val,
-                          ),
-                          const SizedBox(height: 12),
-                          _buildDialogRatingButton(
-                            'NONE',
-                            -1,
-                            rating,
-                            setDialogState,
-                            (val) => rating = val,
-                          ),
-                          if (rating != -1 && ratingTime.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 12),
-                              child: Text(
-                                'Time: ${_formatTime(ratingTime)}',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.w500,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        const Text(
+                                          'Shit Count:',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.black,
+                                          ),
+                                        ),
+                                        Text(
+                                          '$shitCount',
+                                          style: const TextStyle(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.w900,
+                                            color: Colors.black,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
+                                      children: [
+                                        IconButton(
+                                          onPressed: shitCount > 0
+                                              ? () {
+                                                  setDialogState(() {
+                                                    shitCount--;
+                                                  });
+                                                }
+                                              : null,
+                                          icon: const Icon(Icons.remove),
+                                          style: IconButton.styleFrom(
+                                            backgroundColor: Colors.black,
+                                            foregroundColor: Colors.white,
+                                            disabledBackgroundColor:
+                                                Colors.grey[400],
+                                          ),
+                                        ),
+                                        IconButton(
+                                          onPressed: () {
+                                            setDialogState(() {
+                                              shitCount++;
+                                            });
+                                          },
+                                          icon: const Icon(Icons.add),
+                                          style: IconButton.styleFrom(
+                                            backgroundColor: Colors.black,
+                                            foregroundColor: Colors.white,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ),
-                        ],
+                              if (shitCount > 0 && shitTime.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                    left: 8,
+                                    top: 8,
+                                  ),
+                                  child: Text(
+                                    'Time: ${_formatTime(shitTime)}',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              const SizedBox(height: 20),
+
+                              // Rating
+                              const Text(
+                                'Rating:',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+
+                              // Rating buttons
+                              _buildDialogRatingButton(
+                                'TERRIBLE',
+                                0,
+                                rating,
+                                setDialogState,
+                                (val) => rating = val,
+                              ),
+                              const SizedBox(height: 8),
+                              _buildDialogRatingButton(
+                                'BAD',
+                                1,
+                                rating,
+                                setDialogState,
+                                (val) => rating = val,
+                              ),
+                              const SizedBox(height: 8),
+                              _buildDialogRatingButton(
+                                'OKAY',
+                                2,
+                                rating,
+                                setDialogState,
+                                (val) => rating = val,
+                              ),
+                              const SizedBox(height: 8),
+                              _buildDialogRatingButton(
+                                'GOOD',
+                                3,
+                                rating,
+                                setDialogState,
+                                (val) => rating = val,
+                              ),
+                              const SizedBox(height: 8),
+                              _buildDialogRatingButton(
+                                'AMAZING',
+                                4,
+                                rating,
+                                setDialogState,
+                                (val) => rating = val,
+                              ),
+                              const SizedBox(height: 8),
+                              _buildDialogRatingButton(
+                                'NONE',
+                                -1,
+                                rating,
+                                setDialogState,
+                                (val) => rating = val,
+                              ),
+                              if (rating != -1 && ratingTime.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 12),
+                                  child: Text(
+                                    'Time: ${_formatTime(ratingTime)}',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
 
@@ -320,12 +379,15 @@ class _StatsPageState extends State<StatsPage> {
                             ),
                             child: TextButton(
                               onPressed: () async {
+                                // Save the data
                                 await provider.updateDayData(
                                   dateString,
-                                  hasShit,
+                                  shitCount,
                                   rating,
                                 );
+                                // Reload the calendar data
                                 await _loadDayData();
+                                // Close the dialog
                                 if (context.mounted) {
                                   Navigator.of(context).pop();
                                 }
@@ -761,15 +823,17 @@ class _StatsPageState extends State<StatsPage> {
 }
 
 class DayData {
-  final bool hasShit;
+  final int shitCount;
   final int rating;
   final String shitTime;
   final String ratingTime;
 
   DayData({
-    required this.hasShit,
+    required this.shitCount,
     required this.rating,
     this.shitTime = '',
     this.ratingTime = '',
   });
+
+  bool get hasShit => shitCount > 0;
 }

@@ -1,4 +1,4 @@
-package com.example.browncount
+package com.tgeiling.browncount
 
 import io.flutter.embedding.android.FlutterActivity
 

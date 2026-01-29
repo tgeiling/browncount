@@ -190,14 +190,23 @@ class AppProvider extends ChangeNotifier {
 
     _counter++;
 
+    // Get current shit count for today
+    final dayDetails = await getDayDetails(todayString);
+    int currentShitCount = dayDetails?['shitCount'] ?? 0;
+    currentShitCount++;
+
     // Increment shit streak only once per day
     if (_lastShitDate != todayString) {
       _shitStreak++;
       _lastShitDate = todayString;
     }
 
-    // Save day data with timestamp
-    await _saveDayData(todayString, hasShit: true, shitTime: timestamp);
+    // Save day data with shit count and timestamp
+    await _saveDayData(
+      todayString,
+      shitCount: currentShitCount,
+      shitTime: timestamp,
+    );
     await _saveData();
     notifyListeners();
   }
@@ -230,7 +239,7 @@ class AppProvider extends ChangeNotifier {
 
   Future<void> _saveDayData(
     String dateString, {
-    bool? hasShit,
+    int? shitCount,
     int? rating,
     String? shitTime,
     String? ratingTime,
@@ -240,7 +249,7 @@ class AppProvider extends ChangeNotifier {
 
     // Load existing data
     String? existingData = prefs.getString(key);
-    bool currentHasShit = false;
+    int currentShitCount = 0;
     int currentRating = -1;
     String currentShitTime = '';
     String currentRatingTime = '';
@@ -248,7 +257,7 @@ class AppProvider extends ChangeNotifier {
     if (existingData != null) {
       final parts = existingData.split('|');
       if (parts.length >= 2) {
-        currentHasShit = parts[0] == '1';
+        currentShitCount = int.tryParse(parts[0]) ?? 0;
         currentRating = int.tryParse(parts[1]) ?? -1;
       }
       if (parts.length >= 4) {
@@ -258,14 +267,14 @@ class AppProvider extends ChangeNotifier {
     }
 
     // Update with new data
-    if (hasShit != null) currentHasShit = hasShit;
+    if (shitCount != null) currentShitCount = shitCount;
     if (rating != null) currentRating = rating;
     if (shitTime != null) currentShitTime = shitTime;
     if (ratingTime != null) currentRatingTime = ratingTime;
 
-    // Save combined data: hasShit|rating|shitTime|ratingTime
+    // Save combined data: shitCount|rating|shitTime|ratingTime
     final dataString =
-        '${currentHasShit ? '1' : '0'}|$currentRating|$currentShitTime|$currentRatingTime';
+        '$currentShitCount|$currentRating|$currentShitTime|$currentRatingTime';
     await prefs.setString(key, dataString);
   }
 
@@ -280,7 +289,7 @@ class AppProvider extends ChangeNotifier {
     if (parts.length < 2) return null;
 
     return {
-      'hasShit': parts[0] == '1',
+      'shitCount': int.tryParse(parts[0]) ?? 0,
       'rating': int.tryParse(parts[1]) ?? -1,
       'shitTime': parts.length > 2 ? parts[2] : '',
       'ratingTime': parts.length > 3 ? parts[3] : '',
@@ -289,13 +298,13 @@ class AppProvider extends ChangeNotifier {
 
   Future<void> updateDayData(
     String dateString,
-    bool hasShit,
+    int shitCount,
     int rating,
   ) async {
     final today = DateTime.now();
     final todayString = '${today.year}-${today.month}-${today.day}';
 
-    await _saveDayData(dateString, hasShit: hasShit, rating: rating);
+    await _saveDayData(dateString, shitCount: shitCount, rating: rating);
 
     // Recalculate streaks
     await _recalculateShitStreak();
@@ -309,7 +318,8 @@ class AppProvider extends ChangeNotifier {
         final dayData = prefs.getString(key);
         if (dayData != null) {
           final parts = dayData.split('|');
-          if (parts[0] == '1') totalShits++;
+          int count = int.tryParse(parts[0]) ?? 0;
+          totalShits += count;
         }
       }
     }
@@ -337,7 +347,8 @@ class AppProvider extends ChangeNotifier {
 
       if (dayData != null) {
         final parts = dayData.split('|');
-        if (parts[0] == '1') {
+        int shitCount = int.tryParse(parts[0]) ?? 0;
+        if (shitCount > 0) {
           streak++;
         } else {
           break;
