@@ -38,22 +38,25 @@ class _StartPageState extends State<StartPage> {
     if (streakInfo['hasLost']) {
       _hasShownStreakDialog = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _showStreakLostDialog(streakInfo['ratingLost'], streakInfo['shitLost']);
+        _showStreakLostDialog(
+          streakInfo['ratingLost'],
+          streakInfo['brownLost'],
+        );
       });
     }
   }
 
-  void _showStreakLostDialog(bool ratingLost, bool shitLost) {
+  void _showStreakLostDialog(bool ratingLost, bool brownLost) {
     String message = '';
-    if (ratingLost && shitLost) {
+    if (ratingLost && brownLost) {
       message =
-          'You missed giving a rating and taking a shit yesterday. Both streaks have been reset to 0.';
+          'You missed giving a rating and taking a brown yesterday. Both streaks have been reset to 0.';
     } else if (ratingLost) {
       message =
           'You missed giving a rating yesterday. Your rating streak has been reset to 0.';
-    } else if (shitLost) {
+    } else if (brownLost) {
       message =
-          'You missed taking a shit yesterday. Your shit streak has been reset to 0.';
+          'You missed taking a brown yesterday. Your brown streak has been reset to 0.';
     }
 
     showDialog(
@@ -263,8 +266,8 @@ class _StartPageState extends State<StartPage> {
                       const SizedBox(width: 16),
                       Expanded(
                         child: _buildStatBadge(
-                          'SHIT\nSTREAK',
-                          provider.shitStreak,
+                          'BROWN\nSTREAK',
+                          provider.brownStreak,
                           const Color(0xFFB08968),
                         ),
                       ),
@@ -335,7 +338,7 @@ class _StartPageState extends State<StartPage> {
                                   ),
                                   child: const Center(
                                     child: Text(
-                                      'I have taken\na shit',
+                                      'I have taken\na brown',
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
                                         fontSize: 16,

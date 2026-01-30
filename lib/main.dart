@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (context) => AppProvider()..loadData(),
       child: MaterialApp(
-        title: 'Shit Tracker',
+        title: 'Brown Tracker',
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(
             seedColor: const Color(0xFF5D4E37),

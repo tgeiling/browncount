@@ -60,18 +60,18 @@ extension DayRatingExtension on DayRating {
 class AppProvider extends ChangeNotifier {
   int _counter = 0;
   int _ratingStreak = 0;
-  int _shitStreak = 0;
+  int _brownStreak = 0;
   DayRating _todaysRating = DayRating.none;
   String _lastRatingDate = '';
-  String _lastShitDate = '';
+  String _lastBrownDate = '';
   bool _isInitialized = false;
 
   int get counter => _counter;
   int get ratingStreak => _ratingStreak;
-  int get shitStreak => _shitStreak;
+  int get brownStreak => _brownStreak;
   DayRating get todaysRating => _todaysRating;
   String get lastRatingDate => _lastRatingDate;
-  String get lastShitDate => _lastShitDate;
+  String get lastBrownDate => _lastBrownDate;
   bool get isInitialized => _isInitialized;
 
   Future<void> loadData() async {
@@ -81,17 +81,17 @@ class AppProvider extends ChangeNotifier {
 
     _counter = prefs.getInt('counter') ?? 0;
     _ratingStreak = prefs.getInt('ratingStreak') ?? 0;
-    _shitStreak = prefs.getInt('shitStreak') ?? 0;
+    _brownStreak = prefs.getInt('brownStreak') ?? 0;
     int todaysRatingValue = prefs.getInt('todaysRating') ?? -1;
     _todaysRating = dayRatingFromValue(todaysRatingValue);
     _lastRatingDate = prefs.getString('lastRatingDate') ?? '';
-    _lastShitDate = prefs.getString('lastShitDate') ?? '';
+    _lastBrownDate = prefs.getString('lastBrownDate') ?? '';
     _isInitialized = true;
 
     notifyListeners();
 
     bool ratingStreakLost = false;
-    bool shitStreakLost = false;
+    bool brownStreakLost = false;
 
     // Check if rating streak is lost
     if (_lastRatingDate.isNotEmpty && _lastRatingDate != todayString) {
@@ -112,20 +112,20 @@ class AppProvider extends ChangeNotifier {
       }
     }
 
-    // Check if shit streak is lost
-    if (_lastShitDate.isNotEmpty && _lastShitDate != todayString) {
+    // Check if brown streak is lost
+    if (_lastBrownDate.isNotEmpty && _lastBrownDate != todayString) {
       final yesterday = today.subtract(const Duration(days: 1));
       final yesterdayString =
           '${yesterday.year}-${yesterday.month}-${yesterday.day}';
 
-      if (_lastShitDate != yesterdayString) {
-        shitStreakLost = true;
-        _shitStreak = 0;
-        await prefs.setInt('shitStreak', 0);
+      if (_lastBrownDate != yesterdayString) {
+        brownStreakLost = true;
+        _brownStreak = 0;
+        await prefs.setInt('brownStreak', 0);
       }
     }
 
-    if (ratingStreakLost || shitStreakLost) {
+    if (ratingStreakLost || brownStreakLost) {
       notifyListeners();
     }
   }
@@ -134,10 +134,10 @@ class AppProvider extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('counter', _counter);
     await prefs.setInt('ratingStreak', _ratingStreak);
-    await prefs.setInt('shitStreak', _shitStreak);
+    await prefs.setInt('brownStreak', _brownStreak);
     await prefs.setInt('todaysRating', _todaysRating.value);
     await prefs.setString('lastRatingDate', _lastRatingDate);
-    await prefs.setString('lastShitDate', _lastShitDate);
+    await prefs.setString('lastBrownDate', _lastBrownDate);
   }
 
   Future<void> _checkAndUpdateStreaks() async {
@@ -166,11 +166,11 @@ class AppProvider extends ChangeNotifier {
       }
     }
 
-    // Check if shit streak should be broken
-    if (_lastShitDate.isNotEmpty && _lastShitDate != todayString) {
-      if (_lastShitDate != yesterdayString) {
-        _shitStreak = 0;
-        await prefs.setInt('shitStreak', 0);
+    // Check if brown streak should be broken
+    if (_lastBrownDate.isNotEmpty && _lastBrownDate != todayString) {
+      if (_lastBrownDate != yesterdayString) {
+        _brownStreak = 0;
+        await prefs.setInt('brownStreak', 0);
         streaksChanged = true;
       }
     }
@@ -190,22 +190,22 @@ class AppProvider extends ChangeNotifier {
 
     _counter++;
 
-    // Get current shit count for today
+    // Get current brown count for today
     final dayDetails = await getDayDetails(todayString);
-    int currentShitCount = dayDetails?['shitCount'] ?? 0;
-    currentShitCount++;
+    int currentBrownCount = dayDetails?['brownCount'] ?? 0;
+    currentBrownCount++;
 
-    // Increment shit streak only once per day
-    if (_lastShitDate != todayString) {
-      _shitStreak++;
-      _lastShitDate = todayString;
+    // Increment brown streak only once per day
+    if (_lastBrownDate != todayString) {
+      _brownStreak++;
+      _lastBrownDate = todayString;
     }
 
-    // Save day data with shit count and timestamp
+    // Save day data with brown count and timestamp
     await _saveDayData(
       todayString,
-      shitCount: currentShitCount,
-      shitTime: timestamp,
+      brownCount: currentBrownCount,
+      brownTime: timestamp,
     );
     await _saveData();
     notifyListeners();
@@ -239,9 +239,9 @@ class AppProvider extends ChangeNotifier {
 
   Future<void> _saveDayData(
     String dateString, {
-    int? shitCount,
+    int? brownCount,
     int? rating,
-    String? shitTime,
+    String? brownTime,
     String? ratingTime,
   }) async {
     final prefs = await SharedPreferences.getInstance();
@@ -249,32 +249,32 @@ class AppProvider extends ChangeNotifier {
 
     // Load existing data
     String? existingData = prefs.getString(key);
-    int currentShitCount = 0;
+    int currentBrownCount = 0;
     int currentRating = -1;
-    String currentShitTime = '';
+    String currentBrownTime = '';
     String currentRatingTime = '';
 
     if (existingData != null) {
       final parts = existingData.split('|');
       if (parts.length >= 2) {
-        currentShitCount = int.tryParse(parts[0]) ?? 0;
+        currentBrownCount = int.tryParse(parts[0]) ?? 0;
         currentRating = int.tryParse(parts[1]) ?? -1;
       }
       if (parts.length >= 4) {
-        currentShitTime = parts[2];
+        currentBrownTime = parts[2];
         currentRatingTime = parts[3];
       }
     }
 
     // Update with new data
-    if (shitCount != null) currentShitCount = shitCount;
+    if (brownCount != null) currentBrownCount = brownCount;
     if (rating != null) currentRating = rating;
-    if (shitTime != null) currentShitTime = shitTime;
+    if (brownTime != null) currentBrownTime = brownTime;
     if (ratingTime != null) currentRatingTime = ratingTime;
 
-    // Save combined data: shitCount|rating|shitTime|ratingTime
+    // Save combined data: brownCount|rating|brownTime|ratingTime
     final dataString =
-        '$currentShitCount|$currentRating|$currentShitTime|$currentRatingTime';
+        '$currentBrownCount|$currentRating|$currentBrownTime|$currentRatingTime';
     await prefs.setString(key, dataString);
   }
 
@@ -289,41 +289,41 @@ class AppProvider extends ChangeNotifier {
     if (parts.length < 2) return null;
 
     return {
-      'shitCount': int.tryParse(parts[0]) ?? 0,
+      'brownCount': int.tryParse(parts[0]) ?? 0,
       'rating': int.tryParse(parts[1]) ?? -1,
-      'shitTime': parts.length > 2 ? parts[2] : '',
+      'brownTime': parts.length > 2 ? parts[2] : '',
       'ratingTime': parts.length > 3 ? parts[3] : '',
     };
   }
 
   Future<void> updateDayData(
     String dateString,
-    int shitCount,
+    int brownCount,
     int rating,
   ) async {
     final today = DateTime.now();
     final todayString = '${today.year}-${today.month}-${today.day}';
 
-    await _saveDayData(dateString, shitCount: shitCount, rating: rating);
+    await _saveDayData(dateString, brownCount: brownCount, rating: rating);
 
     // Recalculate streaks
-    await _recalculateShitStreak();
+    await _recalculateBrownStreak();
     await _recalculateRatingStreak();
 
-    // Update counter by counting all shits
+    // Update counter by counting all browns
     final prefs = await SharedPreferences.getInstance();
-    int totalShits = 0;
+    int totalBrowns = 0;
     for (String key in prefs.getKeys()) {
       if (key.startsWith('day_')) {
         final dayData = prefs.getString(key);
         if (dayData != null) {
           final parts = dayData.split('|');
           int count = int.tryParse(parts[0]) ?? 0;
-          totalShits += count;
+          totalBrowns += count;
         }
       }
     }
-    _counter = totalShits;
+    _counter = totalBrowns;
 
     // Update today's rating if editing today
     if (dateString == todayString) {
@@ -334,7 +334,7 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> _recalculateShitStreak() async {
+  Future<void> _recalculateBrownStreak() async {
     final prefs = await SharedPreferences.getInstance();
     final today = DateTime.now();
     int streak = 0;
@@ -347,8 +347,8 @@ class AppProvider extends ChangeNotifier {
 
       if (dayData != null) {
         final parts = dayData.split('|');
-        int shitCount = int.tryParse(parts[0]) ?? 0;
-        if (shitCount > 0) {
+        int brownCount = int.tryParse(parts[0]) ?? 0;
+        if (brownCount > 0) {
           streak++;
         } else {
           break;
@@ -358,12 +358,12 @@ class AppProvider extends ChangeNotifier {
       }
     }
 
-    _shitStreak = streak;
+    _brownStreak = streak;
     final todayString = '${today.year}-${today.month}-${today.day}';
     if (streak > 0) {
-      _lastShitDate = todayString;
+      _lastBrownDate = todayString;
     } else {
-      _lastShitDate = '';
+      _lastBrownDate = '';
     }
   }
 
@@ -407,7 +407,7 @@ class AppProvider extends ChangeNotifier {
         '${yesterday.year}-${yesterday.month}-${yesterday.day}';
 
     bool ratingLost = false;
-    bool shitLost = false;
+    bool brownLost = false;
 
     if (_lastRatingDate.isNotEmpty &&
         _lastRatingDate != todayString &&
@@ -415,16 +415,16 @@ class AppProvider extends ChangeNotifier {
       ratingLost = true;
     }
 
-    if (_lastShitDate.isNotEmpty &&
-        _lastShitDate != todayString &&
-        _lastShitDate != yesterdayString) {
-      shitLost = true;
+    if (_lastBrownDate.isNotEmpty &&
+        _lastBrownDate != todayString &&
+        _lastBrownDate != yesterdayString) {
+      brownLost = true;
     }
 
     return {
       'ratingLost': ratingLost,
-      'shitLost': shitLost,
-      'hasLost': ratingLost || shitLost,
+      'brownLost': brownLost,
+      'hasLost': ratingLost || brownLost,
     };
   }
 }

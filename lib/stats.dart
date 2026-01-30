@@ -24,7 +24,7 @@ class _StatsPageState extends State<StatsPage> {
   Map<String, DayData> _dayDataMap = {};
   int _selectedYear = DateTime.now().year;
   int _selectedMonth = DateTime.now().month;
-  bool _showShitCountColors = false;
+  bool _showBrownCountColors = false;
 
   @override
   void initState() {
@@ -52,9 +52,9 @@ class _StatsPageState extends State<StatsPage> {
           final parts = dataString.split('|');
           if (parts.length >= 2) {
             tempMap[dateString] = DayData(
-              shitCount: int.tryParse(parts[0]) ?? 0,
+              brownCount: int.tryParse(parts[0]) ?? 0,
               rating: int.tryParse(parts[1]) ?? -1,
-              shitTime: parts.length > 2 ? parts[2] : '',
+              brownTime: parts.length > 2 ? parts[2] : '',
               ratingTime: parts.length > 3 ? parts[3] : '',
             );
           }
@@ -70,15 +70,15 @@ class _StatsPageState extends State<StatsPage> {
   }
 
   Color _getColorForDay(DayData? data) {
-    if (_showShitCountColors) {
-      return _getShitCountColor(data);
+    if (_showBrownCountColors) {
+      return _getBrownCountColor(data);
     }
 
-    if (data == null || (!data.hasShit && data.rating == -1)) {
+    if (data == null || (!data.hasBrown && data.rating == -1)) {
       return Colors.grey[300]!;
     }
 
-    if (data.hasShit && data.rating == -1) {
+    if (data.hasBrown && data.rating == -1) {
       return Colors.brown[300]!;
     }
 
@@ -98,16 +98,16 @@ class _StatsPageState extends State<StatsPage> {
     }
   }
 
-  Color _getShitCountColor(DayData? data) {
+  Color _getBrownCountColor(DayData? data) {
     if (data == null) return Colors.grey[300]!;
-    return getShitColor(data.shitCount);
+    return getBrownColor(data.brownCount);
   }
 
-  Color getShitColor(int shitCount) {
-    if (shitCount == 0) return Colors.grey[300]!;
-    if (shitCount == 1) return Color(0xFFD2B48C); // Light brown
-    if (shitCount == 2) return Color(0xFFA0826D); // Medium brown
-    if (shitCount == 3) return Color(0xFF8B7355); // Darker brown
+  Color getBrownColor(int brownCount) {
+    if (brownCount == 0) return Colors.grey[300]!;
+    if (brownCount == 1) return Color(0xFFD2B48C); // Light brown
+    if (brownCount == 2) return Color(0xFFA0826D); // Medium brown
+    if (brownCount == 3) return Color(0xFF8B7355); // Darker brown
     return Color(0xFF5D4E37); // Darkest brown for 4+
   }
 
@@ -117,9 +117,9 @@ class _StatsPageState extends State<StatsPage> {
 
     if (!mounted) return;
 
-    int shitCount = details?['shitCount'] ?? 0;
+    int brownCount = details?['brownCount'] ?? 0;
     int rating = details?['rating'] ?? -1;
-    String shitTime = details?['shitTime'] ?? '';
+    String brownTime = details?['brownTime'] ?? '';
     String ratingTime = details?['ratingTime'] ?? '';
 
     showDialog(
@@ -170,7 +170,7 @@ class _StatsPageState extends State<StatsPage> {
                             mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Shit Status
+                              // Brown Status
                               Container(
                                 padding: const EdgeInsets.all(16),
                                 decoration: BoxDecoration(
@@ -187,7 +187,7 @@ class _StatsPageState extends State<StatsPage> {
                                           MainAxisAlignment.spaceBetween,
                                       children: [
                                         const Text(
-                                          'Shit Count:',
+                                          'Brown Count:',
                                           style: TextStyle(
                                             fontSize: 16,
                                             fontWeight: FontWeight.bold,
@@ -195,7 +195,7 @@ class _StatsPageState extends State<StatsPage> {
                                           ),
                                         ),
                                         Text(
-                                          '$shitCount',
+                                          '$brownCount',
                                           style: const TextStyle(
                                             fontSize: 20,
                                             fontWeight: FontWeight.w900,
@@ -210,10 +210,10 @@ class _StatsPageState extends State<StatsPage> {
                                           MainAxisAlignment.spaceEvenly,
                                       children: [
                                         IconButton(
-                                          onPressed: shitCount > 0
+                                          onPressed: brownCount > 0
                                               ? () {
                                                   setDialogState(() {
-                                                    shitCount--;
+                                                    brownCount--;
                                                   });
                                                 }
                                               : null,
@@ -228,7 +228,7 @@ class _StatsPageState extends State<StatsPage> {
                                         IconButton(
                                           onPressed: () {
                                             setDialogState(() {
-                                              shitCount++;
+                                              brownCount++;
                                             });
                                           },
                                           icon: const Icon(Icons.add),
@@ -242,14 +242,14 @@ class _StatsPageState extends State<StatsPage> {
                                   ],
                                 ),
                               ),
-                              if (shitCount > 0 && shitTime.isNotEmpty)
+                              if (brownCount > 0 && brownTime.isNotEmpty)
                                 Padding(
                                   padding: const EdgeInsets.only(
                                     left: 8,
                                     top: 8,
                                   ),
                                   child: Text(
-                                    'Time: ${_formatTime(shitTime)}',
+                                    'Time: ${_formatTime(brownTime)}',
                                     style: const TextStyle(
                                       fontSize: 12,
                                       color: Colors.black,
@@ -382,7 +382,7 @@ class _StatsPageState extends State<StatsPage> {
                                 // Save the data
                                 await provider.updateDayData(
                                   dateString,
-                                  shitCount,
+                                  brownCount,
                                   rating,
                                 );
                                 // Reload the calendar data
@@ -599,14 +599,14 @@ class _StatsPageState extends State<StatsPage> {
               child: InkWell(
                 onTap: () {
                   setState(() {
-                    _showShitCountColors = !_showShitCountColors;
+                    _showBrownCountColors = !_showBrownCountColors;
                   });
                 },
                 child: Container(
                   width: 56,
                   height: 56,
                   child: Icon(
-                    _showShitCountColors
+                    _showBrownCountColors
                         ? Icons.emoji_emotions
                         : Icons.color_lens,
                     color: Colors.white,
@@ -704,16 +704,16 @@ class _StatsPageState extends State<StatsPage> {
             ),
           ),
           const SizedBox(height: 12),
-          if (_showShitCountColors) ...[
+          if (_showBrownCountColors) ...[
             Wrap(
               spacing: 16,
               runSpacing: 8,
               children: [
-                _buildLegendItem(Colors.grey[300]!, 'No shit'),
-                _buildLegendItem(const Color(0xFFD4A574), 'Shit 1'),
-                _buildLegendItem(const Color(0xFFB08968), 'Shits 2'),
-                _buildLegendItem(const Color(0xFF8B7355), 'Shits 3'),
-                _buildLegendItem(const Color(0xFF5D4E37), 'Shits 4+'),
+                _buildLegendItem(Colors.grey[300]!, 'No brown'),
+                _buildLegendItem(const Color(0xFFD4A574), 'Brown 1'),
+                _buildLegendItem(const Color(0xFFB08968), 'Browns 2'),
+                _buildLegendItem(const Color(0xFF8B7355), 'Browns 3'),
+                _buildLegendItem(const Color(0xFF5D4E37), 'Browns 4+'),
               ],
             ),
           ] else ...[
@@ -722,7 +722,7 @@ class _StatsPageState extends State<StatsPage> {
               runSpacing: 8,
               children: [
                 _buildLegendItem(Colors.grey[300]!, 'No data'),
-                _buildLegendItem(Colors.brown[300]!, 'Shit only'),
+                _buildLegendItem(Colors.brown[300]!, 'Brown only'),
                 _buildLegendItem(colorTerrible, ":C Terrible"),
                 _buildLegendItem(colorBad, ':( Bad'),
                 _buildLegendItem(colorOkay, ':| Okay'),
@@ -823,17 +823,17 @@ class _StatsPageState extends State<StatsPage> {
 }
 
 class DayData {
-  final int shitCount;
+  final int brownCount;
   final int rating;
-  final String shitTime;
+  final String brownTime;
   final String ratingTime;
 
   DayData({
-    required this.shitCount,
+    required this.brownCount,
     required this.rating,
-    this.shitTime = '',
+    this.brownTime = '',
     this.ratingTime = '',
   });
 
-  bool get hasShit => shitCount > 0;
+  bool get hasBrown => brownCount > 0;
 }
