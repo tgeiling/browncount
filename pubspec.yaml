@@ -1,8 +1,8 @@
 name: browncount
 
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: 'none'
 
-version: 1.0.0+1
+version: 1.0.2+1
 
 environment:
   sdk: ^3.9.0
@@ -17,6 +17,7 @@ dependencies:
   provider: ^6.1.5+1
   intl: ^0.20.2
   google_fonts: ^8.0.0
+  flutter_local_notifications: ^21.0.0
 
 dev_dependencies:
 
@@ -50,4 +51,5 @@ flutter:
   uses-material-design: true
   assets:
     - assets/logo.png
+    - assets/brown.png
 

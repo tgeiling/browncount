@@ -5,8 +5,14 @@ import 'package:salomon_bottom_bar/salomon_bottom_bar.dart';
 import 'provider.dart';
 import 'start.dart';
 import 'stats.dart';
+import 'notifications.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await initNotifications();
+  await scheduleAllNotifications();
+
   runApp(const MyApp());
 }
 

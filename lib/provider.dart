@@ -1,6 +1,7 @@
 // provider.dart
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'notifications.dart';
 
 enum DayRating { none, terrible, bad, okay, good, amazing }
 
@@ -98,8 +99,12 @@ class AppProvider extends ChangeNotifier {
       final yesterday = today.subtract(const Duration(days: 1));
       final yesterdayString =
           '${yesterday.year}-${yesterday.month}-${yesterday.day}';
+      final twoDaysAgo = today.subtract(const Duration(days: 2));
+      final twoDaysAgoString =
+          '${twoDaysAgo.year}-${twoDaysAgo.month}-${twoDaysAgo.day}';
 
-      if (_lastRatingDate != yesterdayString) {
+      if (_lastRatingDate != yesterdayString &&
+          _lastRatingDate != twoDaysAgoString) {
         ratingStreakLost = true;
         _ratingStreak = 0;
         await prefs.setInt('ratingStreak', 0);
@@ -117,8 +122,12 @@ class AppProvider extends ChangeNotifier {
       final yesterday = today.subtract(const Duration(days: 1));
       final yesterdayString =
           '${yesterday.year}-${yesterday.month}-${yesterday.day}';
+      final twoDaysAgo = today.subtract(const Duration(days: 2));
+      final twoDaysAgoString =
+          '${twoDaysAgo.year}-${twoDaysAgo.month}-${twoDaysAgo.day}';
 
-      if (_lastBrownDate != yesterdayString) {
+      if (_lastBrownDate != yesterdayString &&
+          _lastBrownDate != twoDaysAgoString) {
         brownStreakLost = true;
         _brownStreak = 0;
         await prefs.setInt('brownStreak', 0);
@@ -147,12 +156,16 @@ class AppProvider extends ChangeNotifier {
     final yesterday = today.subtract(const Duration(days: 1));
     final yesterdayString =
         '${yesterday.year}-${yesterday.month}-${yesterday.day}';
+    final twoDaysAgo = today.subtract(const Duration(days: 2));
+    final twoDaysAgoString =
+        '${twoDaysAgo.year}-${twoDaysAgo.month}-${twoDaysAgo.day}';
 
     bool streaksChanged = false;
 
     // Check if rating streak should be broken
     if (_lastRatingDate.isNotEmpty && _lastRatingDate != todayString) {
-      if (_lastRatingDate != yesterdayString) {
+      if (_lastRatingDate != yesterdayString &&
+          _lastRatingDate != twoDaysAgoString) {
         _ratingStreak = 0;
         await prefs.setInt('ratingStreak', 0);
         streaksChanged = true;
@@ -168,7 +181,8 @@ class AppProvider extends ChangeNotifier {
 
     // Check if brown streak should be broken
     if (_lastBrownDate.isNotEmpty && _lastBrownDate != todayString) {
-      if (_lastBrownDate != yesterdayString) {
+      if (_lastBrownDate != yesterdayString &&
+          _lastBrownDate != twoDaysAgoString) {
         _brownStreak = 0;
         await prefs.setInt('brownStreak', 0);
         streaksChanged = true;
@@ -199,6 +213,7 @@ class AppProvider extends ChangeNotifier {
     if (_lastBrownDate != todayString) {
       _brownStreak++;
       _lastBrownDate = todayString;
+      await cancelStreakWarningBrown();
     }
 
     // Save day data with brown count and timestamp
@@ -225,6 +240,7 @@ class AppProvider extends ChangeNotifier {
     if (_lastRatingDate != todayString) {
       _ratingStreak++;
       _lastRatingDate = todayString;
+      await cancelStreakWarningRating();
     }
 
     // Save day data with timestamp
@@ -405,19 +421,24 @@ class AppProvider extends ChangeNotifier {
     final yesterday = today.subtract(const Duration(days: 1));
     final yesterdayString =
         '${yesterday.year}-${yesterday.month}-${yesterday.day}';
+    final twoDaysAgo = today.subtract(const Duration(days: 2));
+    final twoDaysAgoString =
+        '${twoDaysAgo.year}-${twoDaysAgo.month}-${twoDaysAgo.day}';
 
     bool ratingLost = false;
     bool brownLost = false;
 
     if (_lastRatingDate.isNotEmpty &&
         _lastRatingDate != todayString &&
-        _lastRatingDate != yesterdayString) {
+        _lastRatingDate != yesterdayString &&
+        _lastRatingDate != twoDaysAgoString) {
       ratingLost = true;
     }
 
     if (_lastBrownDate.isNotEmpty &&
         _lastBrownDate != todayString &&
-        _lastBrownDate != yesterdayString) {
+        _lastBrownDate != yesterdayString &&
+        _lastBrownDate != twoDaysAgoString) {
       brownLost = true;
     }
 

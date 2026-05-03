@@ -79,7 +79,7 @@ class _StatsPageState extends State<StatsPage> {
     }
 
     if (data.hasBrown && data.rating == -1) {
-      return Colors.brown[300]!;
+      return Color(0xFFD4A574);
     }
 
     switch (data.rating) {
@@ -591,7 +591,7 @@ class _StatsPageState extends State<StatsPage> {
           bottom: 16,
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.black,
+              color: Colors.grey[300],
               border: Border.all(color: Colors.black, width: 4),
             ),
             child: Material(
@@ -605,13 +605,13 @@ class _StatsPageState extends State<StatsPage> {
                 child: Container(
                   width: 56,
                   height: 56,
-                  child: Icon(
-                    _showBrownCountColors
-                        ? Icons.emoji_emotions
-                        : Icons.color_lens,
-                    color: Colors.white,
-                    size: 28,
-                  ),
+                  child: _showBrownCountColors
+                      ? Icon(
+                          Icons.emoji_emotions,
+                          color: Colors.black,
+                          size: 28,
+                        )
+                      : Image.asset('assets/brown.png', width: 28, height: 28),
                 ),
               ),
             ),
@@ -722,7 +722,7 @@ class _StatsPageState extends State<StatsPage> {
               runSpacing: 8,
               children: [
                 _buildLegendItem(Colors.grey[300]!, 'No data'),
-                _buildLegendItem(Colors.brown[300]!, 'Brown only'),
+                _buildLegendItem(Color(0xFFD4A574), 'Brown only'),
                 _buildLegendItem(colorTerrible, ":C Terrible"),
                 _buildLegendItem(colorBad, ':( Bad'),
                 _buildLegendItem(colorOkay, ':| Okay'),
